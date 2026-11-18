@@ -1,0 +1,9 @@
+assessment	version	question	id	kind	path	marks	outcomes	difficulty	type	notes	correct
+math30-unit3	A	1	q01	part	a	2	RF2	1	written	Vertex skill	
+math30-unit3	A	1	q01	subpart	b.i	2	RF2	2	written		
+math30-unit3	A	1	q01	subsubpart	b.ii.a	1	RF2	4	written	First small step	
+math30-unit3	A	1	q01	subsubpart	b.ii.b	2	RF3	4	written	Reasoning about the range	
+math30-unit3	A	2	q02	question		1	RF5	2	mc	Discriminant concept	
+math30-unit3	A	2	q02	choice	A		RF5	2	mc	Positive discriminant	false
+math30-unit3	A	2	q02	choice	B		RF5	2	mc	Negative discriminant	true
+math30-unit3	A	2	q02	choice	C		RF5	2	mc	Repeated root	false

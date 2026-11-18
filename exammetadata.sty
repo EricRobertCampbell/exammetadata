@@ -1,0 +1,156 @@
+\NeedsTeXFormat{LaTeX2e}
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\ProvidesExplPackage{exammetadata}{2026-11-18}{0.2}{Metadata for exam class}
+\ExplSyntaxOn
+\iow_new:N \g_em_out_iow
+\tl_new:N \g_em_assessment_tl
+\tl_new:N \g_em_version_tl
+\tl_new:N \g_em_id_tl
+\tl_new:N \g_em_outcomes_tl
+\tl_new:N \g_em_difficulty_tl
+\tl_new:N \g_em_type_tl
+\tl_new:N \g_em_part_outcomes_tl
+\tl_new:N \g_em_part_difficulty_tl
+\tl_new:N \g_em_part_type_tl
+\tl_new:N \g_em_sub_outcomes_tl
+\tl_new:N \g_em_sub_difficulty_tl
+\tl_new:N \g_em_sub_type_tl
+\tl_new:N \l_em_outcomes_tl
+\tl_new:N \l_em_difficulty_tl
+\tl_new:N \l_em_type_tl
+\tl_new:N \l_em_notes_tl
+\tl_new:N \l_em_correct_tl
+\tl_new:N \l_em_path_tl
+\tl_new:N \l_em_marks_tl
+\tl_new:N \l_em_kind_tl
+\bool_new:N \g_em_assessment_setup_bool
+\keys_define:nn {em/assessment} {
+ id .tl_gset:N = \g_em_assessment_tl,
+ version .tl_gset:N = \g_em_version_tl
+}
+\keys_define:nn {em/item} {
+ outcomes .tl_set:N = \l_em_outcomes_tl,
+ difficulty .tl_set:N = \l_em_difficulty_tl,
+ type .tl_set:N = \l_em_type_tl,
+ notes .tl_set:N = \l_em_notes_tl
+}
+\keys_define:nn {em/question} {
+ id .tl_gset:N = \g_em_id_tl,
+ outcomes .tl_set:N = \l_em_outcomes_tl,
+ difficulty .tl_set:N = \l_em_difficulty_tl,
+ type .tl_set:N = \l_em_type_tl,
+ notes .tl_set:N = \l_em_notes_tl
+}
+\keys_define:nn {em/choice} {notes .tl_set:N = \l_em_notes_tl}
+\NewDocumentCommand \AssessmentSetup {m} {
+ \bool_gset_true:N \g_em_assessment_setup_bool
+ \keys_set:nn {em/assessment}{#1}
+}
+\cs_new:Npn \em_tab: {\char_generate:nn {9}{12}}
+\cs_generate_variant:Nn \tl_to_str:n {V}
+\cs_new_protected:Npn \em_write: {
+ \iow_now:Nx \g_em_out_iow {
+  \tl_to_str:V \g_em_assessment_tl \em_tab:
+  \tl_to_str:V \g_em_version_tl \em_tab:
+  \int_eval:n {\value{question}} \em_tab:
+  \tl_to_str:V \g_em_id_tl \em_tab:
+  \tl_to_str:V \l_em_kind_tl \em_tab:
+  \tl_to_str:V \l_em_path_tl \em_tab:
+  \tl_to_str:V \l_em_marks_tl \em_tab:
+  \tl_to_str:V \l_em_outcomes_tl \em_tab:
+  \tl_to_str:V \l_em_difficulty_tl \em_tab:
+  \tl_to_str:V \l_em_type_tl \em_tab:
+  \tl_to_str:V \l_em_notes_tl \em_tab:
+  \tl_to_str:V \l_em_correct_tl
+ }
+}
+\AtBeginDocument {
+ \bool_if:NTF \g_em_assessment_setup_bool
+  {
+   \iow_open:Nn \g_em_out_iow {\jobname.questions.tsv}
+   \iow_now:Nx \g_em_out_iow {assessment \em_tab: version \em_tab: question \em_tab: id \em_tab: kind \em_tab: path \em_tab: marks \em_tab: outcomes \em_tab: difficulty \em_tab: type \em_tab: notes \em_tab: correct}
+  }
+  {
+   \PackageError{exammetadata}{
+    Missing~\protect\AssessmentSetup
+   }{
+    Call~\protect\AssessmentSetup{id=...,version=...}~in~the~preamble\MessageBreak
+    after~\protect\usepackage{exammetadata}.
+   }
+  }
+}
+\AtEndDocument {
+ \bool_if:NT \g_em_assessment_setup_bool { \iow_close:N \g_em_out_iow }
+}
+\cs_new_protected:Npn \em_reset_local: {
+ \tl_clear:N \l_em_outcomes_tl
+ \tl_clear:N \l_em_difficulty_tl
+ \tl_clear:N \l_em_type_tl
+ \tl_clear:N \l_em_notes_tl
+ \tl_clear:N \l_em_correct_tl
+ \tl_clear:N \l_em_path_tl
+ \tl_clear:N \l_em_marks_tl
+ \tl_clear:N \l_em_kind_tl
+}
+\cs_new_protected:Npn \em_inherit:NNN #1#2#3 {
+ \tl_set_eq:NN \l_em_outcomes_tl #1
+ \tl_set_eq:NN \l_em_difficulty_tl #2
+ \tl_set_eq:NN \l_em_type_tl #3
+}
+\cs_new_protected:Npn \em_save:NNN #1#2#3 {
+ \tl_gset_eq:NN #1 \l_em_outcomes_tl
+ \tl_gset_eq:NN #2 \l_em_difficulty_tl
+ \tl_gset_eq:NN #3 \l_em_type_tl
+}
+\cs_new_protected:Npn \em_emit:nnn #1#2#3 {
+ \tl_set:Nn \l_em_kind_tl {#1}
+ \tl_set:Nx \l_em_path_tl {#2}
+ \tl_set:Nn \l_em_marks_tl {#3}
+ \em_write:
+}
+\NewDocumentCommand \mquestion {o m} {
+ \em_reset_local:
+ \tl_gclear:N \g_em_id_tl
+ \keys_set:nn {em/question}{#2}
+ \em_save:NNN \g_em_outcomes_tl \g_em_difficulty_tl \g_em_type_tl
+ \IfNoValueTF{#1}{\question}{\question[#1]}
+ \tl_if_blank:VTF \g_em_id_tl
+  {\tl_gset:Nx \g_em_id_tl {q\int_eval:n {\value{question}}}}{}
+ \IfNoValueF{#1}{\em_emit:nnn {question} {} {#1}}
+}
+\NewDocumentCommand \mpart {o m} {
+ \em_reset_local:
+ \em_inherit:NNN \g_em_outcomes_tl \g_em_difficulty_tl \g_em_type_tl
+ \keys_set:nn {em/item}{#2}
+ \em_save:NNN \g_em_part_outcomes_tl \g_em_part_difficulty_tl \g_em_part_type_tl
+ \IfNoValueTF{#1}{\part}{\part[#1]}
+ \IfNoValueF{#1}{\em_emit:nnn {part} {\int_to_alph:n {\value{partno}}} {#1}}
+}
+\NewDocumentCommand \msubpart {o m} {
+ \em_reset_local:
+ \em_inherit:NNN \g_em_part_outcomes_tl \g_em_part_difficulty_tl \g_em_part_type_tl
+ \keys_set:nn {em/item}{#2}
+ \em_save:NNN \g_em_sub_outcomes_tl \g_em_sub_difficulty_tl \g_em_sub_type_tl
+ \IfNoValueTF{#1}{\subpart}{\subpart[#1]}
+ \IfNoValueF{#1}{\em_emit:nnn {subpart} {\int_to_alph:n {\value{partno}}.\int_to_roman:n {\value{subpart}}} {#1}}
+}
+\NewDocumentCommand \msubsubpart {o m} {
+ \em_reset_local:
+ \em_inherit:NNN \g_em_sub_outcomes_tl \g_em_sub_difficulty_tl \g_em_sub_type_tl
+ \keys_set:nn {em/item}{#2}
+ \IfNoValueTF{#1}{\subsubpart}{\subsubpart[#1]}
+ \IfNoValueF{#1}{\em_emit:nnn {subsubpart} {\int_to_alph:n {\value{partno}}.\int_to_roman:n {\value{subpart}}.\int_to_alph:n {\value{subsubpart}}} {#1}}
+}
+\cs_new_protected:Npn \em_choice:nn #1#2 {
+ \em_reset_local:
+ \em_inherit:NNN \g_em_outcomes_tl \g_em_difficulty_tl \g_em_type_tl
+ \keys_set:nn {em/choice}{#2}
+ \tl_set:Nn \l_em_correct_tl {#1}
+ \str_if_eq:nnTF {#1}{true}{\CorrectChoice}{\choice}
+ \em_emit:nnn {choice} {\int_to_Alph:n {\value{choice}}} {}
+}
+\NewDocumentCommand \mchoice {m} {\em_choice:nn {false}{#1}}
+\NewDocumentCommand \mcorrectchoice {m} {\em_choice:nn {true}{#1}}
+\ExplSyntaxOff
+\endinput
